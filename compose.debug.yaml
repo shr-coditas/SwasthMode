@@ -1,0 +1,27 @@
+# Opt-in debug mode for the backend. Layer it over compose.yaml:
+#   docker compose -f compose.yaml -f compose.debug.yaml up -d --build api worker
+# Then attach from VS Code ("Attach: API", "Attach: Worker" or "Attach: Backend").
+# debugpy listens only on localhost; never use this file outside local development.
+
+x-debug-build: &debug-build
+  context: ./backend
+  args:
+    UV_SYNC_EXTRA: "--group debug"
+
+services:
+  api:
+    build: *debug-build
+    # No --reload: the reloader runs the app in a child process debugpy would not attach to.
+    command: ["python", "-m", "debugpy", "--listen", "0.0.0.0:5678",
+              "-m", "uvicorn", "app.main:app", "--host", "0.0.0.0", "--port", "8000", "--no-access-log"]
+    ports: ["127.0.0.1:5678:5678"]
+    volumes: ["./backend/app:/app/app:ro"]
+
+  worker:
+    build: *debug-build
+    # Solo pool runs tasks in the debugged process, so task breakpoints are hit.
+    command: ["python", "-m", "debugpy", "--listen", "0.0.0.0:5679",
+              "-m", "celery", "-A", "app.tasks.celery_app:celery", "worker",
+              "--loglevel=INFO", "--pool=solo", "--events"]
+    ports: ["127.0.0.1:5679:5679"]
+    volumes: ["./backend/app:/app/app:ro"]

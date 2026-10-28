@@ -1,0 +1,21 @@
+[project]
+name = "swasthmode-backend"
+version = "0.1.0"
+description = "Synthetic-data wellness POC with real AI providers"
+requires-python = ">=3.12,<3.14"
+dependencies = [
+  "fastapi>=0.115,<1", "uvicorn[standard]>=0.34,<1",
+  "pydantic>=2.10,<3", "pydantic-settings>=2.7,<3",
+  "sqlalchemy>=2.0.36,<2.1", "psycopg[binary]>=3.2,<4", "alembic>=1.14,<2",
+  "openai>=2,<3", "clerk-backend-api>=6,<7", "httpx>=0.28,<1",
+  "celery[redis]>=5.4,<6", "flower>=2,<3", "tzdata>=2025.1",
+  "nemoguardrails==0.24.1", "pyyaml>=6,<7",
+  "cartesia>=4,<5",
+]
+
+[dependency-groups]
+# Installed only into the debug image built through compose.debug.yaml.
+debug = ["debugpy>=1.8,<2"]
+
+[tool.uv]
+package = false

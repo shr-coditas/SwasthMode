@@ -1,0 +1,24 @@
+{
+  "version": "0.2.0",
+  "configurations": [
+    {
+      "name": "Attach: API",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": { "host": "localhost", "port": 5678 },
+      "pathMappings": [{ "localRoot": "${workspaceFolder}/backend/app", "remoteRoot": "/app/app" }],
+      "justMyCode": true
+    },
+    {
+      "name": "Attach: Worker",
+      "type": "debugpy",
+      "request": "attach",
+      "connect": { "host": "localhost", "port": 5679 },
+      "pathMappings": [{ "localRoot": "${workspaceFolder}/backend/app", "remoteRoot": "/app/app" }],
+      "justMyCode": true
+    }
+  ],
+  "compounds": [
+    { "name": "Attach: Backend", "configurations": ["Attach: API", "Attach: Worker"] }
+  ]
+}

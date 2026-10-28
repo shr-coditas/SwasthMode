@@ -1,0 +1,1 @@
+"""SwasthMode modular application."""
