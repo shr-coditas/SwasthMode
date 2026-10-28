@@ -7,6 +7,7 @@ from typing import Literal
 import yaml
 
 from app.core.config import settings
+from app.core.provider_errors import describe
 
 log = logging.getLogger("swasthmode.guardrails")
 
@@ -64,6 +65,6 @@ async def allowed(text: str, direction: Literal["input", "output"]) -> bool:
         return passed
     except SafetyUnavailable:
         raise
-    except Exception:
-        log.warning("layer=nemo direction=%s status=unavailable", direction)
+    except Exception as error:
+        log.warning("layer=nemo direction=%s status=unavailable error=%s", direction, describe(error))
         raise SafetyUnavailable("NeMo safety checking is unavailable. No new domain record was saved") from None

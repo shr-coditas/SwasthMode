@@ -4,6 +4,7 @@ from sqlalchemy import update
 from app.ai.client import ProviderFailure
 from app.ai.nemo import SafetyUnavailable
 from app.core.db.session import sessions
+from app.core.provider_errors import describe
 from app.features.meals.insights import generate_insight
 from app.features.meals.models import Meal
 from app.tasks.celery_app import celery
@@ -40,6 +41,6 @@ def meal_insight(self, meal_id: str, revision: int):
 def enqueue(meal_id: str, revision: int):
     try:
         meal_insight.delay(meal_id, revision)
-    except Exception:
+    except Exception as error:
         set_status(meal_id, revision, insight_status="failed", insight=None)
-        log.info("status=enqueue_failed")
+        log.warning("status=enqueue_failed error=%s", describe(error))

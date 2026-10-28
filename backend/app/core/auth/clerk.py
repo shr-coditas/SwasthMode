@@ -1,3 +1,4 @@
+import logging
 from functools import lru_cache
 from time import time
 
@@ -8,8 +9,10 @@ from fastapi import Depends, HTTPException, Request
 from fastapi.security import HTTPAuthorizationCredentials, HTTPBearer
 
 from app.core.config import settings
+from app.core.provider_errors import describe
 
 bearer = HTTPBearer(auto_error=False)
+log = logging.getLogger("swasthmode.auth")
 
 
 @lru_cache
@@ -32,7 +35,8 @@ def identity(request: Request, token: HTTPAuthorizationCredentials | None = Depe
                 jwt_key=cfg.clerk_jwt_key.get_secret_value().replace("\\n", "\n") or None,
             ),
         )
-    except Exception:
+    except Exception as error:
+        log.warning("layer=clerk status=verification_failed error=%s", describe(error))
         raise HTTPException(401, "Session verification failed. Please sign in again") from None
     claims = verified.payload or {}
     # These checks are on SDK-verified claims, never an unverified JWT decode.

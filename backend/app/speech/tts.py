@@ -1,4 +1,5 @@
 import asyncio
+import logging
 
 from cartesia import AsyncCartesia
 from fastapi import HTTPException
@@ -6,6 +7,9 @@ from fastapi import HTTPException
 from app.ai.guardrails import check_output
 from app.ai.nemo import SafetyUnavailable, allowed
 from app.core.config import settings
+from app.core.provider_errors import describe
+
+log = logging.getLogger("swasthmode.speech")
 
 
 async def synthesize(text: str) -> bytes:
@@ -37,5 +41,6 @@ async def synthesize(text: str) -> bytes:
         if not audio or audio[:4] != b"RIFF" or audio[8:12] != b"WAVE":
             raise ValueError("No WAV audio returned")
         return bytes(audio)
-    except Exception:
+    except Exception as error:
+        log.warning("layer=tts model=%s status=failed error=%s", cfg.cartesia_model, describe(error))
         raise HTTPException(502, "Speech generation failed or timed out. Your saved result and text remain available") from None

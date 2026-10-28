@@ -5,6 +5,7 @@ from typing import TypeVar
 from openai import AsyncAzureOpenAI, AsyncOpenAI
 from pydantic import BaseModel
 from app.core.config import settings
+from app.core.provider_errors import describe
 
 T = TypeVar("T", bound=BaseModel)
 log = logging.getLogger("swasthmode.ai")
@@ -37,7 +38,8 @@ async def structured(prompt: str, context: str, schema: type[T]) -> T:
         return parsed
     except ProviderFailure:
         raise
-    except Exception:
+    except Exception as error:
+        log.warning("model=%s status=failed error=%s", cfg.ai_model, describe(error))
         raise ProviderFailure("Text AI failed or returned an invalid response. Nothing new was saved") from None
     finally:
         log.info("model=%s duration_ms=%d", cfg.ai_model, (time.monotonic() - started) * 1000)
