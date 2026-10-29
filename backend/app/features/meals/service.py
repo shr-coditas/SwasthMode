@@ -57,7 +57,9 @@ async def process(access: PatientAccess, message: MealMessage, *, coordinator=No
             extraction = None
             question = None
         else:
-            safety_input = json.dumps({"feature": "meals", "messages": messages[-5:]}, ensure_ascii=False)
+            # Earlier turns were checked when they arrived; re-checking them lets one
+            # blocked message poison every later turn in the conversation.
+            safety_input = json.dumps({"feature": "meals", "message": message.text.strip()}, ensure_ascii=False)
             if not await allowed(safety_input, "input"):
                 raise HTTPException(422, "The safety check blocked this message. Please rephrase your meal report")
             if turn.checkpoint.get("extraction"):
@@ -92,7 +94,8 @@ async def process(access: PatientAccess, message: MealMessage, *, coordinator=No
         def save():
             with sessions()() as db, db.begin():
                 owned(db, turn)
-                state = {**turn.state, "messages": messages}
+                # A blocked message must not enter the history the extractor sees.
+                state = {**turn.state, "messages": turn.state.get("messages", []) if blocked else messages}
                 result = MealReply(request_id=request_id, conversation_id=turn.conversation_id,
                                    status="reply", reply=direct_reply or question or "")
                 if question:
